@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -6,6 +10,7 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+
 
 namespace TracingApplication
 {
@@ -18,6 +23,26 @@ namespace TracingApplication
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices(this.ConfigureServices)
+                .Build();
+            _ = host.Services.GetService<IHostedService>();
+        }
+
+        private void ConfigureServices(IServiceCollection serviceCollection)
+        {
+            serviceCollection
+                .AddOpenTelemetryTracing((builder) => builder
+                    .AddSource("SampleService")
+                    .SetResourceBuilder(
+                        ResourceBuilder.CreateDefault().AddService("SampleService", serviceVersion: "1.0.0")
+                    )
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    //.AddConsoleExporter()
+                    .AddZipkinExporter()
+               );
         }
     }
 }
