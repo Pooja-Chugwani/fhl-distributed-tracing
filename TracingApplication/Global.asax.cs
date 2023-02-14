@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System;
@@ -16,6 +17,8 @@ namespace TracingApplication
 {
     public class WebApiApplication : System.Web.HttpApplication
     {
+        private TracerProvider tracerProvider;
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
@@ -24,15 +27,31 @@ namespace TracingApplication
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-            var host = Host.CreateDefaultBuilder()
+            this.tracerProvider = Sdk.CreateTracerProviderBuilder()
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+            .AddSource("Parent Service")
+            .SetResourceBuilder(
+                ResourceBuilder.CreateDefault()
+                    .AddService("TestService"))
+            
+            .AddZipkinExporter()
+            /*.AddOtlpExporter(options =>
+            {
+                options.Endpoint =
+                    new Uri("http://localhost:4317");
+            })*/
+            .Build();
+
+            /*var host = Host.CreateDefaultBuilder()
                 .ConfigureServices(this.ConfigureServices)
                 .Build();
-            _ = host.Services.GetService<IHostedService>();
+            _ = host.Services.GetService<IHostedService>();*/
         }
 
         private void ConfigureServices(IServiceCollection serviceCollection)
         {
-            serviceCollection
+            /*serviceCollection
                 .AddOpenTelemetryTracing((builder) => builder
                     .AddSource("SampleService")
                     .SetResourceBuilder(
@@ -40,9 +59,9 @@ namespace TracingApplication
                     )
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    //.AddConsoleExporter()
-                    .AddZipkinExporter()
-               );
+                    .AddConsoleExporter()
+                    //.AddZipkinExporter()
+               );*/
         }
     }
 }

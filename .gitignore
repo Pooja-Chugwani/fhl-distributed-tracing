@@ -17,6 +17,8 @@
 [Rr]elease/
 x64/
 build/
+bin/
+obj/
 bld/
 docker_drop*/
 container_build_artifacts/

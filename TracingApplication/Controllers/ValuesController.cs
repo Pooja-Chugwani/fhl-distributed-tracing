@@ -22,12 +22,12 @@ namespace TracingApplication.Controllers
             BaseAddress = new Uri("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true")
         };
 
-        static ActivitySource source = new ActivitySource("SampleService");
+        static ActivitySource source = new ActivitySource("Parent Service");
 
         // GET api/values
         public string Get()
         {
-            using (Activity activity = source.StartActivity("SomeWork"))
+            using (Activity activity = source.StartActivity("Get Values Call"))
             {
                 using (var client = new HttpClient( new HttpClientHandler { })) 
                 {
