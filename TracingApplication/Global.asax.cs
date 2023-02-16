@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry;
+using OpenTelemetry.Exporter.Geneva;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System;
@@ -30,12 +31,18 @@ namespace TracingApplication
             this.tracerProvider = Sdk.CreateTracerProviderBuilder()
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
-            .AddSource("Parent Service")
+                .AddAspNetInstrumentation()
+            .AddSource("TracingApplication")
+            .SetSampler(new AlwaysOnSampler())
             .SetResourceBuilder(
                 ResourceBuilder.CreateDefault()
-                    .AddService("TestService"))
+                    .AddService("TracingApplication"))
             
             .AddZipkinExporter()
+            .AddGenevaTraceExporter(o =>
+            {
+                o.ConnectionString = "EtwSession=OpenTelemetry";
+            })
             /*.AddOtlpExporter(options =>
             {
                 options.Endpoint =
